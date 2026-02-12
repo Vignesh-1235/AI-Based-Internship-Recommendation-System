@@ -1,0 +1,43 @@
+Goal: Integrate a lightweight AI decision-making model (Python) into the existing project so internship recommendations respect all candidate fields (education, interests, skills, location/mode). Keep the UI untouched. No DB. Use a Python model file called recommender.py and a server endpoint that runs it. Return 3–5 best exact matches from a 15–20 item dummy dataset using exact matching + simple decision logic (location filter first, then skill+interest+education weighting).
+
+Repo root (zip provided): InternRecommender/
+
+IMPORTANT - files to add / edit (exact paths):
+
+Add Python model file
+
+Path: InternRecommender/server/model/recommender.py
+
+Behavior: read JSON user profile from stdin, load internships from InternRecommender/server/data/internships.json, apply strict location filter (online/offline and city), then compute a simple score based on skill matches, interest match, education compatibility, and return top 3–5 matches as JSON to stdout.
+
+Implementation: (paste this entire Python file content)
+
+# InternRecommender/server/model/recommender.py
+# Simple, dependency-free Python recommender.
+# Accepts a JSON object on stdin:
+# { "education": "B.Tech - Computer Science", "interests": ["Information Technology"], "skills": ["Python","React"], "location": {"type":"offline"|"online","cities":["Chennai"]} }
+# Outputs JSON list of recommendations to stdout.
+
+import sys, json, math
+from typing import List, Dict
+
+def load_internships(path="server/data/internships.json"):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def normalize(s: str):
+    return s.strip().lower()
+
+def skill_score(user_skills: List[str], intern_skills: List[str]) -> float:
+    if not intern_skills:
+        return 0.0
+    u = [normalize(x) for x in user_skills]
+    i = [normalize(x) for x in intern_skills]
+    matched = 0
+    for us in u:
+        for is_ in i:
+            # allow partial match (contains) for forgiving matching
+            if us in is_ or is_ in us:
+                matched += 1
+                break
+    return matched / max(1, len(i))

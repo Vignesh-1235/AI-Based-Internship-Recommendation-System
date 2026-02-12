@@ -1,0 +1,45 @@
+Frontend: call the new API (no UI changes)
+
+File to edit: InternRecommender/client/src/pages/RecommendationsPage.tsx
+
+Replace the local decisionTree invocation (where it currently imports or calls local matching) with a fetch("/api/recommend", { method:"POST", headers:{'Content-Type':'application/json'}, body: JSON.stringify(userProfile) }) call and show the returned recommendations exactly where your UI already reads matches.
+
+Minimal replacement snippet (paste into the React effect/submit handler that currently triggers matching):
+
+// build userProfile with this shape:
+const userProfile = {
+  education: selectedEducation, // string
+  interests: selectedInterests, // string[]
+  skills: selectedSkills,       // string[]
+  location: { type: locationMode, cities: selectedCities } // {type:"online"|"offline", cities:[]}
+};
+
+const resp = await fetch("/api/recommend", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(userProfile),
+});
+const data = await resp.json();
+// data.recommendations is the array returned from Python
+setRecommendations(data.recommendations || []);
+
+
+Where to put the Python file in your repo (exact path)
+
+InternRecommender/server/model/recommender.py (this exact path).
+
+Where to put the internships JSON (exact path)
+
+InternRecommender/server/data/internships.json (this exact path).
+
+Other notes for Replit AI / developer:
+
+Use python3 in spawn(...). If the Replit environment uses python, adjust command to python.
+
+The Python script is dependency-free (pure stdlib) to avoid installing packages. If you want a model with scikit-learn, mention it separately and I will add a requirements.txt and a bundled model.
+
+Keep UI files untouched except for the minimal fetch change in RecommendationsPage.tsx.
+
+Add 15–20 high-quality internship items to server/data/internships.json with correctly spelled city names (Chennai, Bengaluru, Pune, Remote, etc.) so strict matching works.
+
+Add basic error-handling/logging to make debugging easy (written in the provided TS route).
